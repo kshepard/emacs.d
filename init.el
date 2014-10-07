@@ -54,7 +54,10 @@
 (require 'init-hippie-expand)
 (require 'init-auto-complete)
 (require 'init-windows)
-(require 'init-sessions)
+
+;; I don't like the saved sessions
+;; (require 'init-sessions)
+
 (require 'init-fonts)
 (require 'init-mmm)
 
@@ -69,7 +72,10 @@
 (require 'init-crontab)
 (require 'init-textile)
 (require 'init-markdown)
-(require 'init-csv)
+
+;; This mode is unavailable currently
+;; (require 'init-csv)
+
 (require 'init-erlang)
 (require 'init-javascript)
 (require 'init-php)
@@ -83,13 +89,17 @@
 (require 'init-ruby-mode)
 (require 'init-rails)
 (require 'init-sql)
+(require 'init-scala)
 
 (require 'init-paredit)
 (require 'init-lisp)
 (require 'init-slime)
 (require 'init-clojure)
-(when (>= emacs-major-version 24)
-  (require 'init-clojure-cider))
+
+;; Failing dependency
+;; (when (>= emacs-major-version 24)
+;;   (require 'init-clojure-cider))
+
 (require 'init-common-lisp)
 
 (when *spell-check-support-enabled*
