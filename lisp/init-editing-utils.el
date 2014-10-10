@@ -81,9 +81,11 @@
   (global-prettify-symbols-mode))
 
 
-(require-package 'undo-tree)
-(global-undo-tree-mode)
-(diminish 'undo-tree-mode)
+
+;;; Uncomment to enable undo-tree mode. I prefer the standard undo mode.
+;; (require-package 'undo-tree)
+;; (global-undo-tree-mode)
+;; (diminish 'undo-tree-mode)
 
 
 (require-package 'highlight-symbol)
