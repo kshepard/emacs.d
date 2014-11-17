@@ -11,7 +11,7 @@
   :type 'symbol
   :group 'programming
   :options '(js2-mode js-mode))
-(defvar preferred-javascript-indent-level 2)
+(defvar preferred-javascript-indent-level 4)
 
 ;; Need to first remove from list if present, since elpa adds entries too, which
 ;; may be in an arbitrary order
@@ -25,8 +25,8 @@
 ;; js2-mode
 (after-load 'js2-mode
   ;; Disable js2 mode's syntax error highlighting by default...
-  (setq-default js2-mode-show-parse-errors nil
-                js2-mode-show-strict-warnings nil)
+  (setq-default js2-mode-show-parse-errors t
+                js2-mode-show-strict-warnings t)
   ;; ... but enable it if flycheck can't handle javascript
   (autoload 'flycheck-get-checker-for-buffer "flycheck")
   (defun sanityinc/disable-js2-checks-if-flycheck-active ()
