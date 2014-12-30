@@ -72,6 +72,7 @@
 (require 'init-crontab)
 (require 'init-textile)
 (require 'init-markdown)
+(require 'init-restclient)
 
 ;; This mode is unavailable currently
 ;; (require 'init-csv)
