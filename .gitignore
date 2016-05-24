@@ -2,6 +2,7 @@
 /.emacs.desktop
 /auto-save-list
 /.session
+/session.*
 /custom.el
 *.elc
 CVS
@@ -35,3 +36,10 @@ site-lisp/package/
 /eshell
 ido.last
 recentf
+/.cask/
+/.sx/
+/org-clock-save.el
+/ditaa*.jar
+/ido.last
+/recentf
+/viper

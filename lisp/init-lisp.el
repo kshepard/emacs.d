@@ -1,11 +1,11 @@
 (require-package 'elisp-slime-nav)
 (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
-  (add-hook hook 'elisp-slime-nav-mode))
+  (add-hook hook 'turn-on-elisp-slime-nav-mode))
+(add-hook 'emacs-lisp-mode-hook (lambda () (setq mode-name "ELisp")))
 
 (require-package 'lively)
 
 (setq-default initial-scratch-message "")
-
 
 
 ;; Make C-x C-e run 'eval-region if the region is active
@@ -17,7 +17,7 @@
       (eval-region (min (point) (mark)) (max (point) (mark)))
     (pp-eval-last-sexp prefix)))
 
-(global-set-key (kbd "M-:") 'pp-eval-expression)
+(global-set-key [remap eval-expression] 'pp-eval-expression)
 
 (after-load 'lisp-mode
   (define-key emacs-lisp-mode-map (kbd "C-x C-e") 'sanityinc/eval-last-sexp-or-region))
@@ -26,12 +26,22 @@
 (ipretty-mode 1)
 
 
-(defadvice pp-display-expression (after make-read-only (expression out-buffer-name) activate)
+(defadvice pp-display-expression (after sanityinc/make-read-only (expression out-buffer-name) activate)
   "Enable `view-mode' in the output buffer - if any - so it can be closed with `\"q\"."
   (when (get-buffer out-buffer-name)
     (with-current-buffer out-buffer-name
       (view-mode 1))))
 
+
+
+(defun sanityinc/maybe-set-bundled-elisp-readonly ()
+  "If this elisp appears to be part of Emacs, then disallow editing."
+  (when (and (buffer-file-name)
+             (string-match-p "\\.el\\.gz\\'" (buffer-file-name)))
+    (setq buffer-read-only t)
+    (view-mode 1)))
+
+(add-hook 'emacs-lisp-mode-hook 'sanityinc/maybe-set-bundled-elisp-readonly)
 
 
 ;; Use C-c C-z to toggle between elisp files and an ielm session
@@ -67,27 +77,6 @@
 ;; Hippie-expand
 ;; ----------------------------------------------------------------------------
 
-(defun my/emacs-lisp-module-name ()
-  "Search the buffer for `provide' declaration."
-  (save-excursion
-    (goto-char (point-min))
-    (when (search-forward-regexp "^(provide '" nil t)
-      (symbol-name (symbol-at-point)))))
-
-;; Credit to Chris Done for this one.
-(defun my/try-complete-lisp-symbol-without-namespace (old)
-  "Hippie expand \"try\" function which expands \"-foo\" to \"modname-foo\" in elisp."
-  (unless old
-    (he-init-string (he-lisp-symbol-beg) (point))
-    (when (string-prefix-p "-" he-search-string)
-      (let ((mod-name (my/emacs-lisp-module-name)))
-        (when mod-name
-          (setq he-expand-list (list (concat mod-name he-search-string)))))))
-  (when he-expand-list
-    (he-substitute-string (car he-expand-list))
-    (setq he-expand-list nil)
-    t))
-
 (defun set-up-hippie-expand-for-elisp ()
   "Locally set `hippie-expand' completion functions for use with Emacs Lisp."
   (make-local-variable 'hippie-expand-try-functions-list)
@@ -99,10 +88,14 @@
 ;; ----------------------------------------------------------------------------
 ;; Automatic byte compilation
 ;; ----------------------------------------------------------------------------
+(when (maybe-require-package 'auto-compile)
+  (auto-compile-on-save-mode 1)
+  (auto-compile-on-load-mode 1))
 
-(require-package 'auto-compile)
-(auto-compile-on-save-mode 1)
-(auto-compile-on-load-mode 1)
+;; ----------------------------------------------------------------------------
+;; Load .el if newer than corresponding .elc
+;; ----------------------------------------------------------------------------
+(setq load-prefer-newer t)
 
 ;; ----------------------------------------------------------------------------
 ;; Highlight current sexp
@@ -142,20 +135,34 @@
 (after-load 'redshank
   (diminish 'redshank-mode))
 
+(defun sanityinc/enable-check-parens-on-save ()
+  "Run `check-parens' when the current buffer is saved."
+  (add-hook 'after-save-hook #'check-parens nil t))
+
+(defun sanityinc/disable-indent-guide ()
+  (when (bound-and-true-p indent-guide-mode)
+    (indent-guide-mode -1)))
+
+(defvar sanityinc/lispy-modes-hook
+  '(rainbow-delimiters-mode
+    enable-paredit-mode
+    turn-on-eldoc-mode
+    redshank-mode
+    sanityinc/disable-indent-guide
+    sanityinc/enable-check-parens-on-save)
+  "Hook run in all Lisp modes.")
+
+
+(when (maybe-require-package 'aggressive-indent)
+  (add-to-list 'sanityinc/lispy-modes-hook 'aggressive-indent-mode))
 
 (defun sanityinc/lisp-setup ()
   "Enable features useful in any Lisp mode."
-  (rainbow-delimiters-mode t)
-  (enable-paredit-mode)
-  (turn-on-eldoc-mode)
-  (redshank-mode)
-  (add-hook 'after-save-hook #'check-parens nil t))
+  (run-hooks 'sanityinc/lispy-modes-hook))
 
 (defun sanityinc/emacs-lisp-setup ()
   "Enable features useful when working with elisp."
-  (elisp-slime-nav-mode t)
-  (set-up-hippie-expand-for-elisp)
-  (ac-emacs-lisp-mode-setup))
+  (set-up-hippie-expand-for-elisp))
 
 (defconst sanityinc/elispy-modes
   '(emacs-lisp-mode ielm-mode)
@@ -174,9 +181,11 @@
 (dolist (hook (mapcar #'derived-mode-hook-name sanityinc/elispy-modes))
   (add-hook hook 'sanityinc/emacs-lisp-setup))
 
-
-(require-package 'eldoc-eval)
-(require 'eldoc-eval)
+(if (boundp 'eval-expression-minibuffer-setup-hook)
+    (add-hook 'eval-expression-minibuffer-setup-hook #'eldoc-mode)
+  (require-package 'eldoc-eval)
+  (require 'eldoc-eval)
+  (eldoc-in-minibuffer-mode 1))
 
 (add-to-list 'auto-mode-alist '("\\.emacs-project\\'" . emacs-lisp-mode))
 (add-to-list 'auto-mode-alist '("archive-contents\\'" . emacs-lisp-mode))
@@ -233,20 +242,65 @@
 
 
 
-;; rainbow-mode not available
-;; (when (eval-when-compile (>= emacs-major-version 24))
-;;   ;; rainbow-mode needs color.el, bundled with Emacs >= 24.
-;;   (require-package 'rainbow-mode)
+;; Extras for theme editing
 
-;;   (defun sanityinc/enable-rainbow-mode-if-theme ()
-;;     (when (string-match "\\(color-theme-\\|-theme\\.el\\)" (buffer-name))
-;;       (rainbow-mode 1)))
+(defvar sanityinc/theme-mode-hook nil
+  "Hook triggered when editing a theme file.")
 
-;;   (add-hook 'emacs-lisp-mode-hook 'sanityinc/enable-rainbow-mode-if-theme))
+(defun sanityinc/run-theme-mode-hooks-if-theme ()
+  "Run `sanityinc/theme-mode-hook' if this appears to a theme."
+  (when (string-match "\\(color-theme-\\|-theme\\.el\\)" (buffer-name))
+    (run-hooks 'sanityinc/theme-mode-hook)))
 
-(when (eval-when-compile (>= emacs-major-version 24))
-  (require-package 'highlight-quoted)
+(add-hook 'emacs-lisp-mode-hook 'sanityinc/run-theme-mode-hooks-if-theme)
+
+(when (maybe-require-package 'rainbow-mode)
+  (add-hook 'sanityinc/theme-mode-hook 'rainbow-mode))
+
+
+
+(when (maybe-require-package 'highlight-quoted)
   (add-hook 'emacs-lisp-mode-hook 'highlight-quoted-mode))
 
+
+(when (maybe-require-package 'flycheck)
+  (require-package 'flycheck-package)
+  (after-load 'flycheck
+    (flycheck-package-setup)))
+
+
+
+;; ERT
+(after-load 'ert
+  (define-key ert-results-mode-map (kbd "g") 'ert-results-rerun-all-tests))
+
+
+(defun sanityinc/cl-libify-next ()
+  "Find next symbol from 'cl and replace it with the 'cl-lib equivalent."
+  (interactive)
+  (let ((case-fold-search nil))
+    (re-search-forward
+     (concat
+      "("
+      (regexp-opt
+       ;; Not an exhaustive list
+       '("loop" "incf" "plusp" "first" "decf" "minusp" "assert"
+         "case" "destructuring-bind" "second" "third" "defun*"
+         "defmacro*" "return-from" "labels" "cadar" "fourth"
+         "cadadr") t)
+      "\\_>")))
+  (let ((form (match-string 1)))
+    (backward-sexp)
+    (cond
+     ((string-match "^\\(defun\\|defmacro\\)\\*$")
+      (kill-sexp)
+      (insert (concat "cl-" (match-string 1))))
+     (t
+      (insert "cl-")))
+    (when (fboundp 'aggressive-indent-indent-defun)
+      (aggressive-indent-indent-defun))))
+
+
+(maybe-require-package 'cask-mode)
 
 (provide 'init-lisp)
