@@ -101,5 +101,8 @@
   (define-key interactive-haskell-mode-map (kbd "M-N") 'haskell-goto-next-error)
   (define-key interactive-haskell-mode-map (kbd "M-P") 'haskell-goto-prev-error))
 
+;; Set up Intero
+(package-install 'intero)
+(add-hook 'haskell-mode-hook 'intero-mode)
 
 (provide 'init-haskell)

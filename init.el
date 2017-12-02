@@ -93,6 +93,7 @@
 
 (require 'init-erlang)
 (require 'init-javascript)
+(require 'init-typescript)
 (require 'init-php)
 (require 'init-org)
 (require 'init-nxml)
@@ -100,6 +101,13 @@
 (require 'init-css)
 (require 'init-haml)
 (require 'init-python-mode)
+
+(require-package 'flycheck-pyflakes)
+(require 'flycheck-pyflakes)
+(add-hook 'python-mode-hook 'flycheck-mode)
+(add-to-list 'flycheck-disabled-checkers 'python-flake8)
+(add-to-list 'flycheck-disabled-checkers 'python-pylint)
+
 (unless (version<= emacs-version "24.3")
   (require 'init-haskell))
 (require 'init-elm)

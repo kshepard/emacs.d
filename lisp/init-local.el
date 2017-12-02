@@ -78,4 +78,6 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
+(setq find-program "/usr/bin/find" grep-program "/bin/grep")
+
 (provide 'init-local)
