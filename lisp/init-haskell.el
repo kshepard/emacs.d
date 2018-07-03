@@ -64,9 +64,10 @@
 
 
 
-;; Indentation
-(add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
-
+;; Indentation - turned off at the moment
+;;(add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
+;; (add-hook 'haskell-mode-hook 'hindent-mode)
+;; (setq-default hindent-reformat-buffer-on-save t)
 
 
 ;; Source code helpers
@@ -101,8 +102,8 @@
   (define-key interactive-haskell-mode-map (kbd "M-N") 'haskell-goto-next-error)
   (define-key interactive-haskell-mode-map (kbd "M-P") 'haskell-goto-prev-error))
 
-;; Set up Intero
+;; Set up Intero -- don't add a hook though: don't want to use it with nix
 (package-install 'intero)
-(add-hook 'haskell-mode-hook 'intero-mode)
+;;(add-hook 'haskell-mode-hook 'intero-mode)
 
 (provide 'init-haskell)

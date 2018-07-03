@@ -7,23 +7,23 @@
 (setq completion-cycle-threshold 5)
 
 
-(when (maybe-require-package 'company)
-  (add-hook 'after-init-hook 'global-company-mode)
-  (after-load 'company
-    (diminish 'company-mode "CMP")
-    (define-key company-mode-map (kbd "M-/") 'company-complete)
-    (define-key company-active-map (kbd "M-/") 'company-select-next)
-    (setq-default company-backends '((company-capf company-dabbrev-code) company-dabbrev)))
-  (global-set-key (kbd "M-C-/") 'company-complete)
-  (when (maybe-require-package 'company-quickhelp)
-    (after-load 'company-quickhelp
-      (define-key company-quickhelp-mode-map (kbd "M-h") nil))
-    (add-hook 'after-init-hook 'company-quickhelp-mode))
+;; (when (maybe-require-package 'company)
+;;   (add-hook 'after-init-hook 'global-company-mode)
+;;   (after-load 'company
+;;     (diminish 'company-mode "CMP")
+;;     (define-key company-mode-map (kbd "M-/") 'company-complete)
+;;     (define-key company-active-map (kbd "M-/") 'company-select-next)
+;;     (setq-default company-backends '((company-capf company-dabbrev-code) company-dabbrev)))
+;;   (global-set-key (kbd "M-C-/") 'company-complete)
+;;   (when (maybe-require-package 'company-quickhelp)
+;;     (after-load 'company-quickhelp
+;;       (define-key company-quickhelp-mode-map (kbd "M-h") nil))
+;;     (add-hook 'after-init-hook 'company-quickhelp-mode))
 
-  (defun sanityinc/local-push-company-backend (backend)
-    "Add BACKEND to a buffer-local version of `company-backends'."
-    (set (make-local-variable 'company-backends)
-         (append (list backend) company-backends))))
+;;   (defun sanityinc/local-push-company-backend (backend)
+;;     "Add BACKEND to a buffer-local version of `company-backends'."
+;;     (set (make-local-variable 'company-backends)
+;;          (append (list backend) company-backends))))
 
 
 ;; Suspend page-break-lines-mode while company menu is active
